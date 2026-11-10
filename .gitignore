@@ -1,0 +1,59 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Database
+*.db
+*.sqlite3
+
+# Encrypted files
+encrypted_storage/*.enc
+encrypted_storage/*.bin
+
+# Blockchain build artifacts (keep ABI files)
+blockchain/artifacts/cache/
+
+# Node (if using Hardhat)
+node_modules/
+.npm/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+instance/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Private keys - NEVER commit
+*.pem
+*.key
+private_key*
