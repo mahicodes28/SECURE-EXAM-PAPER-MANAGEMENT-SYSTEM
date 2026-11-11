@@ -13,13 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
 COPY . .
 
+# Ensure storage directory exists
+RUN mkdir -p encrypted_storage
+
 # Expose port
 EXPOSE 8080
 
-# Run with gunicorn
+# Run with Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--threads", "4", "--timeout", "120", "backend.app:create_app()"]

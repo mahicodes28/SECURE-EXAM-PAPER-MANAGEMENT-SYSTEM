@@ -1,11 +1,11 @@
 services:
   - type: web
     name: secure-exam-paper-management-system
-    env: python
+    runtime: python
     region: oregon
     plan: free
-    buildCommand: "pip install -r requirements.txt gunicorn"
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 backend.app:create_app()"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 'backend.app:create_app()'"
     envVars:
       - key: FLASK_ENV
         value: production
@@ -14,9 +14,11 @@ services:
       - key: WTF_CSRF_SECRET_KEY
         generateValue: true
       - key: FERNET_KEY
-        generateValue: true
+        value: kYRfmm9sUEH8FGuAlJZKh1ZlCaEoloiBzEajshGC84o=
       - key: DATABASE_URL
         value: sqlite:///exam_system.db
+      - key: UPLOAD_FOLDER
+        value: encrypted_storage
       - key: ADMIN_EMAIL
         value: admin@university.edu
       - key: ADMIN_PASSWORD
