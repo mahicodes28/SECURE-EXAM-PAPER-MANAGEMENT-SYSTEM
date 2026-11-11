@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Explorer — ExamChain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0"><i class="bi bi-diagram-3-fill text-warning"></i> Ethereum Blockchain Explorer</h3>
+            <p class="text-muted small">Live blocks, transactions, and event logs for ExamPaperRegistry</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" onclick="loadExplorerData()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+
+    <!-- Status Overview -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Network Status</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <span id="node-indicator" class="spinner-grow spinner-grow-sm text-warning"></span>
+                    <span id="node-status" class="fw-bold">Checking...</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Latest Block</div>
+                <div class="stat-number fs-3" id="latest-block-num">-</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Contract Address</div>
+                <div class="small mt-2"><code id="contract-addr" class="hash-code">Not Deployed</code></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Ledger Table -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0">Examination Transactions & Events</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Tx Hash</th>
+                            <th>Subject</th>
+                            <th>Exam ID</th>
+                            <th>Document Hash</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tx-table-body">
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadExplorerData() {
+    try {
+        const statusRes = await fetch('/api/blockchain/status');
+        const statusData = await statusRes.json();
+        
+        const nodeStatus = document.getElementById('node-status');
+        const nodeIndicator = document.getElementById('node-indicator');
+        const blockNum = document.getElementById('latest-block-num');
+        const contractAddr = document.getElementById('contract-addr');
+
+        if (statusData.connected) {
+            nodeStatus.innerText = 'Connected (Ganache)';
+            nodeIndicator.className = 'badge bg-success p-1';
+            blockNum.innerText = statusData.block_number ?? '0';
+            contractAddr.innerText = statusData.contract_address || 'Not Configured';
+        } else {
+            nodeStatus.innerText = 'Offline (Ganache not running)';
+            nodeIndicator.className = 'badge bg-secondary p-1';
+            blockNum.innerText = 'N/A';
+            contractAddr.innerText = 'Offline Mode';
+        }
+
+        const txRes = await fetch('/api/blockchain/transactions');
+        const txData = await txRes.json();
+        const tbody = document.getElementById('tx-table-body');
+
+        if (txRes.ok && txData.transactions && txData.transactions.length > 0) {
+            tbody.innerHTML = txData.transactions.map(tx => `
+                <tr>
+                    <td><span class="badge bg-primary text-uppercase">${tx.type}</span></td>
+                    <td><span class="hash-code">${tx.transaction_hash ? tx.transaction_hash.substring(0, 14) + '...' : 'Off-Chain'}</span></td>
+                    <td class="fw-bold">${tx.subject_code}</td>
+                    <td>#${tx.exam_id ?? 'N/A'}</td>
+                    <td><span class="hash-code">${tx.document_hash.substring(0, 14)}...</span></td>
+                    <td class="small text-muted">${tx.timestamp || 'Just now'}</td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No blockchain transactions recorded yet.</td></tr>`;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadExplorerData);
+</script>
+{% endblock %}
+

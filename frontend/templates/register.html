@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Registration — Secure Exam System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-badge-fill text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="fw-bold mt-2">Faculty Registration</h4>
+                        <p class="text-muted small">Submit account request for examination portal</p>
+                    </div>
+
+                    <div id="reg-alert" class="alert d-none"></div>
+
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" id="name" class="form-control" placeholder="Prof. Jane Doe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">University Email</label>
+                            <input type="email" id="email" class="form-control" placeholder="jane.doe@university.edu" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Department</label>
+                                <input type="text" id="department" class="form-control" placeholder="Computer Science" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Employee ID</label>
+                                <input type="text" id="employee_id" class="form-control" placeholder="EMP-2024-001" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Ethereum Wallet Address (Optional)</label>
+                            <input type="text" id="wallet_address" class="form-control" placeholder="0x...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Password</label>
+                            <input type="password" id="password" class="form-control" placeholder="Minimum 8 characters" required>
+                        </div>
+                        <button type="submit" class="btn btn-gold w-100 py-2 mt-2">Submit Application</button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">Already registered?</span>
+                        <a href="{{ url_for('page.login_page') }}" class="small fw-semibold text-decoration-none">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('reg-alert');
+    alertBox.className = 'alert d-none';
+
+    const payload = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        department: document.getElementById('department').value.trim(),
+        employee_id: document.getElementById('employee_id').value.trim(),
+        wallet_address: document.getElementById('wallet_address').value.trim() || null,
+        password: document.getElementById('password').value
+    };
+
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alertBox.className = 'alert alert-success';
+            alertBox.innerText = data.message || 'Registration successful! Awaiting admin approval.';
+            document.getElementById('registerForm').reset();
+        } else {
+            alertBox.className = 'alert alert-danger';
+            alertBox.innerText = data.error || 'Registration failed';
+        }
+    } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = 'Server error during registration';
+    }
+});
+</script>
+{% endblock %}
+

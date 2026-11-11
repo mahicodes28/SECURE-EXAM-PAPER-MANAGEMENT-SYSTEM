@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Account Management — ExamChain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Faculty Accounts Management</h3>
+            <p class="text-muted small">Approve or suspend faculty access to the secure examination portal</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Employee ID</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="faculty-table">
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Loading faculty members...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadFaculty() {
+    try {
+        const res = await fetch('/api/admin/faculty');
+        const data = await res.json();
+        const tbody = document.getElementById('faculty-table');
+        if (res.ok && data.faculty.length > 0) {
+            tbody.innerHTML = data.faculty.map(f => `
+                <tr>
+                    <td class="fw-bold">${f.name}</td>
+                    <td>${f.email}</td>
+                    <td>${f.department || 'N/A'}</td>
+                    <td>${f.employee_id || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${f.account_status === 'active' ? 'bg-success' : f.account_status === 'pending' ? 'bg-warning text-dark' : 'bg-danger'} text-uppercase">
+                            ${f.account_status}
+                        </span>
+                    </td>
+                    <td>
+                        ${f.account_status === 'pending' ? `
+                            <button class="btn btn-success btn-sm me-1" onclick="approveFaculty(${f.id})">Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectFaculty(${f.id})">Reject</button>
+                        ` : f.account_status === 'active' ? `
+                            <button class="btn btn-outline-danger btn-sm" onclick="rejectFaculty(${f.id})">Suspend</button>
+                        ` : `
+                            <button class="btn btn-outline-success btn-sm" onclick="approveFaculty(${f.id})">Reactivate</button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No faculty registered.</td></tr>`;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function approveFaculty(id) {
+    try {
+        const res = await fetch(`/api/admin/faculty/${id}/approve`, { method: 'POST' });
+        const d = await res.json();
+        showToast(d.message || 'Faculty approved');
+        loadFaculty();
+    } catch (e) {
+        showToast('Error approving faculty');
+    }
+}
+
+async function rejectFaculty(id) {
+    try {
+        const res = await fetch(`/api/admin/faculty/${id}/reject`, { method: 'POST' });
+        const d = await res.json();
+        showToast(d.message || 'Status updated');
+        loadFaculty();
+    } catch (e) {
+        showToast('Error updating faculty status');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadFaculty);
+</script>
+{% endblock %}
+

@@ -1,0 +1,180 @@
+:root {
+    --primary: #061B35;
+    --secondary: #0B2A4A;
+    --accent: #F5D477;
+    --accent-hover: #e5c360;
+    --bg-light: #F4F6FA;
+    --text-dark: #1E293B;
+    --text-muted: #64748B;
+    --card-bg: #FFFFFF;
+    --border-color: #E2E8F0;
+    --sidebar-width: 260px;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(6, 27, 53, 0.15);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #FFFFFF !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-brand span.badge-blockchain {
+    background-color: var(--accent);
+    color: var(--primary);
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--primary);
+    min-height: calc(100vh - 56px);
+    color: #FFFFFF;
+    padding: 1.5rem 1rem;
+}
+
+.sidebar .nav-link {
+    color: #CBD5E1;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    background-color: var(--secondary);
+    color: var(--accent);
+}
+
+/* Dashboard & Cards */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(6, 27, 53, 0.08);
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Buttons */
+.btn-gold {
+    background-color: var(--accent);
+    color: var(--primary);
+    font-weight: 600;
+    border: none;
+    transition: background 0.2s;
+}
+
+.btn-gold:hover {
+    background-color: var(--accent-hover);
+    color: var(--primary);
+}
+
+.btn-primary-custom {
+    background-color: var(--primary);
+    color: #FFFFFF;
+    border: none;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--secondary);
+    color: #FFFFFF;
+}
+
+/* Status Badges */
+.badge-status-pending {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.badge-status-approved {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-status-rejected {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+/* Hash format */
+.hash-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    background: #E2E8F0;
+    padding: 3px 6px;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+/* Verification Result Banners */
+.verification-box {
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+}
+.verification-verified {
+    background-color: #ECFDF5;
+    border: 2px solid var(--success);
+    color: #065F46;
+}
+.verification-tampered {
+    background-color: #FEF2F2;
+    border: 2px solid var(--danger);
+    color: #991B1B;
+}
+.verification-notfound {
+    background-color: #FFFBEB;
+    border: 2px solid var(--warning);
+    color: #92400E;
+}
+

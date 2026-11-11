@@ -1,8 +1,10 @@
 import os
 import sys
 
-# Add backend directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Ensure project root is in sys.path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
@@ -11,9 +13,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from config import config
-from models import db, User
-from database import init_db
+from backend.config import config
+from backend.models import db, User
+from backend.database import init_db
 
 def create_app(config_name=None):
     if config_name is None:
@@ -23,8 +25,8 @@ def create_app(config_name=None):
     
     app = Flask(
         __name__,
-        template_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend', 'templates'),
-        static_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend', 'static')
+        template_folder=os.path.join(project_root, 'frontend', 'templates'),
+        static_folder=os.path.join(project_root, 'frontend', 'static')
     )
     
     app.config.from_object(config[config_name])
@@ -36,7 +38,7 @@ def create_app(config_name=None):
     # Login manager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login_page'
+    login_manager.login_view = 'page.login_page'
     login_manager.login_message_category = 'warning'
     
     @login_manager.user_loader
@@ -44,20 +46,18 @@ def create_app(config_name=None):
         return User.query.get(int(user_id))
     
     # Register blueprints
-    from routes.auth_routes import auth_bp
-    from routes.admin_routes import admin_bp
-    from routes.faculty_routes import faculty_bp
-    from routes.exam_routes import exam_bp
-    from routes.blockchain_routes import blockchain_bp
+    from backend.routes.auth_routes import auth_bp
+    from backend.routes.admin_routes import admin_bp
+    from backend.routes.faculty_routes import faculty_bp
+    from backend.routes.exam_routes import exam_bp
+    from backend.routes.blockchain_routes import blockchain_bp
+    from backend.routes.page_routes import page_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(faculty_bp, url_prefix='/api/faculty')
     app.register_blueprint(exam_bp, url_prefix='/api/exam')
     app.register_blueprint(blockchain_bp, url_prefix='/api/blockchain')
-    
-    # Frontend page routes
-    from routes.page_routes import page_bp
     app.register_blueprint(page_bp)
     
     # Error handlers

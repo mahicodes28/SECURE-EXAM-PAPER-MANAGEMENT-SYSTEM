@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}ExamChain — Blockchain Secure Exam Paper Management System{% endblock %}
+
+{% block content %}
+<div class="bg-primary text-white py-5 text-center" style="background: linear-gradient(135deg, #061B35 0%, #0B2A4A 100%);">
+    <div class="container py-5">
+        <div class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-3 fw-semibold">
+            <i class="bi bi-shield-check"></i> Enterprise Cybersecurity & Ethereum Blockchain
+        </div>
+        <h1 class="display-4 fw-bold mb-3">Blockchain-Based Secure Exam Paper Management System</h1>
+        <p class="lead text-light opacity-75 col-lg-8 mx-auto mb-4">
+            Guaranteeing examination integrity, end-to-end cryptographic encryption, and transparent audit logging for university examination boards.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('page.verify_page') }}" class="btn btn-gold btn-lg px-4">
+                <i class="bi bi-patch-check"></i> Verify Exam Paper
+            </a>
+            <a href="{{ url_for('page.login_page') }}" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-box-arrow-in-right"></i> Portal Access
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5 py-4">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="stat-card h-100 p-4">
+                <div class="fs-1 text-warning mb-2"><i class="bi bi-cpu-fill"></i></div>
+                <h5 class="fw-bold">Smart Contract Ledger</h5>
+                <p class="text-muted small">
+                    Every upload, approval, and revocation decision is irreversibly recorded on Ethereum smart contracts.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card h-100 p-4">
+                <div class="fs-1 text-warning mb-2"><i class="bi bi-file-earmark-lock-fill"></i></div>
+                <h5 class="fw-bold">Fernet Encryption</h5>
+                <p class="text-muted small">
+                    Confidential examination papers are encrypted symmetrically with Fernet before off-chain storage.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card h-100 p-4">
+                <div class="fs-1 text-warning mb-2"><i class="bi bi-fingerprint"></i></div>
+                <h5 class="fw-bold">SHA-256 Verification</h5>
+                <p class="text-muted small">
+                    Cryptographic hashing guarantees instantaneous detection of tampered questions or modified PDFs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

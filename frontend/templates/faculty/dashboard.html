@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard — ExamChain{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar d-none d-md-block">
+        <h6 class="text-uppercase text-muted fw-bold px-3 mb-3 small">Faculty Area</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('page.faculty_dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.faculty_upload') }}">
+                    <i class="bi bi-cloud-arrow-up"></i> Upload Exam Paper
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.faculty_papers') }}">
+                    <i class="bi bi-journal-text"></i> My Submissions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.verify_page') }}">
+                    <i class="bi bi-patch-check"></i> Verify Integrity
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-dark mb-0">Welcome, {{ current_user.name }}</h3>
+                <p class="text-muted small">Manage and track your encrypted examination submissions</p>
+            </div>
+            <a href="{{ url_for('page.faculty_upload') }}" class="btn btn-gold">
+                <i class="bi bi-plus-circle"></i> New Exam Paper
+            </a>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Total Submissions</div>
+                    <div class="stat-number" id="fac-total">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-number text-warning" id="fac-pending">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Approved</div>
+                    <div class="stat-number text-success" id="fac-approved">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-number text-danger" id="fac-rejected">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0">Recent Submissions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Exam Name</th>
+                                <th>Date</th>
+                                <th>Document Hash</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fac-table-body">
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Loading your papers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadFacultyDashboard() {
+    try {
+        const res = await fetch('/api/faculty/dashboard-stats');
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('fac-total').innerText = data.stats.total;
+            document.getElementById('fac-pending').innerText = data.stats.pending;
+            document.getElementById('fac-approved').innerText = data.stats.approved;
+            document.getElementById('fac-rejected').innerText = data.stats.rejected;
+
+            const tbody = document.getElementById('fac-table-body');
+            if (data.recent_papers.length > 0) {
+                tbody.innerHTML = data.recent_papers.map(p => `
+                    <tr>
+                        <td class="fw-bold">${p.subject_code}</td>
+                        <td>${p.exam_name}</td>
+                        <td>${p.exam_date || 'N/A'}</td>
+                        <td><span class="hash-code">${p.document_hash.substring(0, 16)}...</span></td>
+                        <td>
+                            <span class="badge badge-status-${p.approval_status} text-uppercase px-2 py-1">
+                                ${p.approval_status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No exam papers uploaded yet.</td></tr>`;
+            }
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadFacultyDashboard);
+</script>
+{% endblock %}
+

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Document Integrity — ExamChain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <i class="bi bi-patch-check-fill text-warning fs-1"></i>
+                <h3 class="fw-bold mt-2">Document Integrity Verification</h3>
+                <p class="text-muted">Cryptographically verify whether an examination paper matches the authentic blockchain record</p>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form id="verifyForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Select PDF File to Verify</label>
+                            <input type="file" id="verify-file" name="file" class="form-control" accept=".pdf" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Database Exam ID (Optional for fast lookup)</label>
+                            <input type="number" id="verify-exam-id" name="exam_id" class="form-control" placeholder="Leave blank to search by document SHA-256 hash">
+                        </div>
+                        <button type="submit" id="btn-verify" class="btn btn-primary-custom w-100 py-2">
+                            <i class="bi bi-search"></i> Compute Hash & Verify Against Ledger
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Result Box -->
+            <div id="result-container" class="d-none"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-verify');
+    const container = document.getElementById('result-container');
+    container.className = 'd-none';
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Verifying...`;
+
+    const formData = new FormData(e.target);
+
+    try {
+        const res = await fetch('/api/exam/verify', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        container.classList.remove('d-none');
+
+        if (data.result === 'VERIFIED') {
+            container.innerHTML = `
+                <div class="verification-box verification-verified">
+                    <i class="bi bi-shield-fill-check fs-1 text-success mb-2"></i>
+                    <h4 class="fw-bold mb-1">INTEGRITY VERIFIED: ORIGINAL DOCUMENT MATCH</h4>
+                    <p class="small mb-3">The cryptographic SHA-256 hash matches the immutable record registered on the ledger.</p>
+                    <div class="text-start bg-white p-3 rounded border">
+                        <div class="small"><strong>Subject:</strong> ${data.paper.subject_code} - ${data.paper.exam_name}</div>
+                        <div class="small"><strong>Computed Hash:</strong> <code>${data.provided_hash}</code></div>
+                        <div class="small"><strong>Blockchain Record Hash:</strong> <code>${data.original_hash}</code></div>
+                        <div class="small"><strong>Approval Status:</strong> <span class="badge badge-status-${data.paper.approval_status}">${data.paper.approval_status}</span></div>
+                        ${data.transaction_hash ? `<div class="small"><strong>Tx Hash:</strong> <code>${data.transaction_hash}</code></div>` : ''}
+                    </div>
+                </div>
+            `;
+        } else if (data.result === 'TAMPERED') {
+            container.innerHTML = `
+                <div class="verification-box verification-tampered">
+                    <i class="bi bi-shield-fill-x fs-1 text-danger mb-2"></i>
+                    <h4 class="fw-bold mb-1">CRITICAL WARNING: TAMPERED DOCUMENT DETECTED</h4>
+                    <p class="small mb-3">The hash of this PDF does not match the registered examination hash! Content has been altered.</p>
+                    <div class="text-start bg-white p-3 rounded border">
+                        <div class="small text-danger"><strong>Provided PDF Hash:</strong> <code>${data.provided_hash}</code></div>
+                        <div class="small text-success"><strong>Original Ledger Hash:</strong> <code>${data.original_hash}</code></div>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="verification-box verification-notfound">
+                    <i class="bi bi-question-circle-fill fs-1 text-warning mb-2"></i>
+                    <h4 class="fw-bold mb-1">NO REGISTERED EXAM FOUND</h4>
+                    <p class="small mb-3">No registered examination on record matches this document hash.</p>
+                    <div class="small"><strong>Provided Hash:</strong> <code>${data.provided_hash}</code></div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        container.classList.remove('d-none');
+        container.innerHTML = `<div class="alert alert-danger">Error connecting to verification service.</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-search"></i> Compute Hash & Verify Against Ledger`;
+    }
+});
+</script>
+{% endblock %}
+

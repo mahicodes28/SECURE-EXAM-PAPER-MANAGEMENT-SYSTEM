@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}My Submitted Papers — ExamChain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">My Submitted Examination Papers</h3>
+            <p class="text-muted small">Tracking approval lifecycle and blockchain status</p>
+        </div>
+        <a href="{{ url_for('page.faculty_upload') }}" class="btn btn-gold btn-sm">
+            <i class="bi bi-cloud-arrow-up"></i> Upload New Paper
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Subject</th>
+                            <th>Exam Name</th>
+                            <th>Date</th>
+                            <th>Document Hash</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="my-papers-table">
+                        <tr><td colspan="5" class="text-center py-4 text-muted">Loading submissions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadMyPapers() {
+    try {
+        const res = await fetch('/api/faculty/papers');
+        const data = await res.json();
+        const tbody = document.getElementById('my-papers-table');
+        if (res.ok && data.papers.length > 0) {
+            tbody.innerHTML = data.papers.map(p => `
+                <tr>
+                    <td class="fw-bold">${p.subject_code}</td>
+                    <td>${p.exam_name}</td>
+                    <td>${p.exam_date || 'N/A'}</td>
+                    <td><span class="hash-code">${p.document_hash.substring(0, 16)}...</span></td>
+                    <td><span class="badge badge-status-${p.approval_status} text-uppercase">${p.approval_status}</span></td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No examination submissions found.</td></tr>`;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+document.addEventListener('DOMContentLoaded', loadMyPapers);
+</script>
+{% endblock %}
+

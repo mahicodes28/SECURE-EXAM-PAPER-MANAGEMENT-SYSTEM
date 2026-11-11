@@ -1,5 +1,5 @@
-from models import db, User, AuditLog
-from config import Config
+from backend.models import db, User, AuditLog
+from backend.config import Config
 import os
 
 def init_db(app):

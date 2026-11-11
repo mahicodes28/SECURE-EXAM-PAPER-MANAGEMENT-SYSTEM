@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — ExamChain{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar d-none d-md-block">
+        <h6 class="text-uppercase text-muted fw-bold px-3 mb-3 small">Admin Panel</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('page.admin_dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.admin_faculty') }}">
+                    <i class="bi bi-people"></i> Faculty Accounts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.admin_papers') }}">
+                    <i class="bi bi-file-earmark-check"></i> Exam Papers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.admin_audit_logs') }}">
+                    <i class="bi bi-clock-history"></i> Audit Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.blockchain_explorer') }}">
+                    <i class="bi bi-diagram-3"></i> Blockchain Explorer
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-dark mb-0">Examination Department Dashboard</h3>
+                <p class="text-muted small">Real-time status of papers, approvals, and on-chain records</p>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadStats()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Total Papers</div>
+                    <div class="stat-number" id="stat-total-papers">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-number text-warning" id="stat-pending-papers">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Approved Papers</div>
+                    <div class="stat-number text-success" id="stat-approved-papers">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Registered Faculty</div>
+                    <div class="stat-number text-primary" id="stat-faculty">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Papers List -->
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Recent Examination Submissions</h5>
+                <a href="{{ url_for('page.admin_papers') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Exam Name</th>
+                                <th>Faculty</th>
+                                <th>Document Hash (SHA-256)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="papers-table-body">
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Loading submissions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadStats() {
+    try {
+        const res = await fetch('/api/admin/dashboard-stats');
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('stat-total-papers').innerText = data.papers.total;
+            document.getElementById('stat-pending-papers').innerText = data.papers.pending;
+            document.getElementById('stat-approved-papers').innerText = data.papers.approved;
+            document.getElementById('stat-faculty').innerText = data.faculty.total;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function loadRecentPapers() {
+    try {
+        const res = await fetch('/api/admin/papers?per_page=5');
+        const data = await res.json();
+        const tbody = document.getElementById('papers-table-body');
+        if (res.ok && data.papers.length > 0) {
+            tbody.innerHTML = data.papers.map(p => `
+                <tr>
+                    <td class="fw-bold">${p.subject_code}</td>
+                    <td>${p.exam_name}</td>
+                    <td>${p.uploader_name || 'Faculty'}</td>
+                    <td><span class="hash-code">${p.document_hash.substring(0, 16)}...</span></td>
+                    <td>
+                        <span class="badge badge-status-${p.approval_status} text-uppercase px-2 py-1">
+                            ${p.approval_status}
+                        </span>
+                    </td>
+                    <td>
+                        ${p.approval_status === 'pending' ? `
+                            <button class="btn btn-success btn-sm me-1" onclick="approvePaper(${p.id})">Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectPaper(${p.id})">Reject</button>
+                        ` : `<span class="text-muted small">Decision Recorded</span>`}
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No examination submissions found.</td></tr>`;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function approvePaper(id) {
+    if (!confirm('Record on-chain approval for this exam paper?')) return;
+    try {
+        const res = await fetch(`/api/admin/papers/${id}/approve`, { method: 'POST' });
+        const d = await res.json();
+        showToast(d.message || 'Approved');
+        loadStats();
+        loadRecentPapers();
+    } catch (err) {
+        showToast('Error approving paper');
+    }
+}
+
+async function rejectPaper(id) {
+    const reason = prompt('Please specify rejection reason:');
+    if (reason === null) return;
+    try {
+        const res = await fetch(`/api/admin/papers/${id}/reject`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ reason })
+        });
+        const d = await res.json();
+        showToast(d.message || 'Rejected');
+        loadStats();
+        loadRecentPapers();
+    } catch (err) {
+        showToast('Error rejecting paper');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadRecentPapers();
+});
+</script>
+{% endblock %}
+
